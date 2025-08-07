@@ -144,7 +144,7 @@ export default function UnderwritingPage() {
             <h1 className="text-3xl font-bold text-gray-900">Underwriting Analysis</h1>
             <p className="mt-2 text-gray-600">{property.property}</p>
             <div className="mt-2 text-sm text-gray-500">
-              Current: {property.current_units} units • {property.current_beds} beds • {property.current_baths} baths
+              Current: {property.current_units} units
             </div>
           </div>
 
@@ -205,26 +205,6 @@ export default function UnderwritingPage() {
                         )}
                       </div>
                       <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div>
-                          <label className="block text-gray-700 mb-1">Beds</label>
-                          <input
-                            type="number"
-                            value={unit.beds}
-                            onChange={(e) => updateUnit(index, 'beds', parseInt(e.target.value) || 0)}
-                            className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                            min="0"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-gray-700 mb-1">Baths</label>
-                          <input
-                            type="number"
-                            value={unit.baths}
-                            onChange={(e) => updateUnit(index, 'baths', parseInt(e.target.value) || 0)}
-                            className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                            min="0"
-                          />
-                        </div>
                         <div>
                           <label className="block text-gray-700 mb-1">Sq Ft</label>
                           <input

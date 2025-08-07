@@ -8,7 +8,7 @@ import { PropertySummary } from '@/lib/types'
 import { Calculator, MapPin, ChevronUp, ChevronDown, Home } from 'lucide-react'
 import Navbar from '@/components/navbar'
 
-type SortField = 'property' | 'price' | 'current_beds' | 'current_baths' | 'lot_size' | 'additional_units'
+type SortField = 'property' | 'price' | 'lot_size' | 'total_units' | 'additional_units'
 type SortDirection = 'asc' | 'desc'
 
 export default function HomePage() {
@@ -151,24 +151,7 @@ export default function HomePage() {
                         <SortIcon field="price" />
                       </div>
                     </th>
-                    <th 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
-                      onClick={() => handleSort('current_beds')}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <span>Beds</span>
-                        <SortIcon field="current_beds" />
-                      </div>
-                    </th>
-                    <th 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
-                      onClick={() => handleSort('current_baths')}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <span>Baths</span>
-                        <SortIcon field="current_baths" />
-                      </div>
-                    </th>
+
                     <th 
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
                       onClick={() => handleSort('lot_size')}
@@ -176,6 +159,15 @@ export default function HomePage() {
                       <div className="flex items-center space-x-1">
                         <span>Lot Size</span>
                         <SortIcon field="lot_size" />
+                      </div>
+                    </th>
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                      onClick={() => handleSort('total_units')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>Existing Units</span>
+                        <SortIcon field="total_units" />
                       </div>
                     </th>
                     <th 
@@ -213,15 +205,21 @@ export default function HomePage() {
                           {formatCurrency(property.price)}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{property.current_beds}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{property.current_baths}</div>
-                      </td>
+
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
                           {formatNumber(property.lot_size)} sq ft
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {property.total_units && property.total_units > 0 ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              {property.total_units}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">0</span>
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
