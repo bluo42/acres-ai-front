@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Calculator, Home } from 'lucide-react'
+import { Calculator, Home, Map } from 'lucide-react'
 
 export default function Navbar() {
   const pathname = usePathname()
@@ -14,10 +14,21 @@ export default function Navbar() {
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-2">
               <Calculator className="h-8 w-8 text-blue-600" />
-              <span className="text-xl font-bold text-gray-900">Property Analysis</span>
+              <span className="text-xl font-bold text-gray-900">Acres AI</span>
             </Link>
           </div>
           <div className="flex items-center space-x-4">
+            <Link
+              href="/macro"
+              className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium ${
+                pathname === '/macro'
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              <Map className="h-4 w-4" />
+              <span>Macro</span>
+            </Link>
             <Link
               href="/"
               className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium ${

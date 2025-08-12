@@ -6,7 +6,7 @@ import { QueryProvider } from './providers/query-provider'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Property Analysis',
+  title: 'Acres AI',
   description: 'Real estate investment analysis and underwriting tool',
 }
 

@@ -104,6 +104,18 @@ export default function UnderwritingPage() {
     return (value * 100).toFixed(2) + '%'
   }
 
+  const getPropertyImageUrl = (mlsId: string | number) => {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    if (!supabaseUrl) {
+      console.error('NEXT_PUBLIC_SUPABASE_URL is not defined')
+      return null
+    }
+    
+    const imageUrl = `${supabaseUrl}/storage/v1/object/public/photos/${mlsId}.jpg`
+    console.log('Property image URL:', imageUrl)
+    return imageUrl
+  }
+
   if (!property) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -151,6 +163,21 @@ export default function UnderwritingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Left Column - Input Form */}
             <div className="space-y-6">
+              {/* Property Photo */}
+              {getPropertyImageUrl(property.id) && (
+                <div className="bg-white shadow rounded-lg overflow-hidden">
+                  <img 
+                    src={getPropertyImageUrl(property.id)!}
+                    alt={property.property}
+                    className="w-full h-64 object-cover"
+                    onError={(e) => {
+                      // Hide image if it fails to load
+                      (e.target as HTMLElement).style.display = 'none'
+                    }}
+                  />
+                </div>
+              )}
+
               <div className="bg-white shadow rounded-lg p-6">
                 <h2 className="text-lg font-medium text-gray-900 mb-4">Property Details</h2>
                 <div className="grid grid-cols-2 gap-4 text-sm">
