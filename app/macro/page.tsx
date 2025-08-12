@@ -153,9 +153,9 @@ export default function MacroPage() {
 
   const colorScale = getColorScale(currentData || [])
   
-  const getColor = (ratio: number) => {
+  const getColor = (ratio: number): string => {
     if (ratio === 0 || !colorScale) return '#999999'
-    return colorScale(ratio)
+    return colorScale(ratio) as string
   }
 
   // Debug logging
@@ -329,7 +329,7 @@ export default function MacroPage() {
                         key={zip.zip}
                         bounds={bounds}
                         pathOptions={{
-                          fillColor: getColor(zip.avg_rent_home_ratio),
+                          fillColor: getColor(Number(zip.avg_rent_home_ratio)),
                           fillOpacity: 0.7,
                           color: 'rgba(255,255,255,0.3)',
                           weight: 0.5,
@@ -373,7 +373,7 @@ export default function MacroPage() {
                         key={city.city}
                         bounds={bounds}
                         pathOptions={{
-                          fillColor: getColor(city.avg_rent_home_ratio),
+                          fillColor: getColor(Number(city.avg_rent_home_ratio)),
                           fillOpacity: 0.7,
                           color: 'rgba(255,255,255,0.4)',
                           weight: 1,
