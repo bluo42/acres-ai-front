@@ -215,56 +215,6 @@ export default function MacroPage() {
               </div>
             </div>
 
-            {/* Statistics Cards */}
-            {stats && (
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-6">
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-blue-600 text-xs font-medium">AVG RATIO</p>
-                      <p className="text-xl font-bold text-blue-900">{formatRatio(stats.avgRatio)}</p>
-                    </div>
-                    <TrendingUp className="h-8 w-8 text-blue-500 opacity-50" />
-                  </div>
-                </div>
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-green-600 text-xs font-medium">BEST RATIO</p>
-                      <p className="text-xl font-bold text-green-900">{formatRatio(stats.maxRatio)}</p>
-                    </div>
-                    <TrendingUp className="h-8 w-8 text-green-500 opacity-50" />
-                  </div>
-                </div>
-                <div className="bg-red-50 p-4 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-red-600 text-xs font-medium">WORST RATIO</p>
-                      <p className="text-xl font-bold text-red-900">{formatRatio(stats.minRatio)}</p>
-                    </div>
-                    <TrendingDown className="h-8 w-8 text-red-500 opacity-50" />
-                  </div>
-                </div>
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-purple-600 text-xs font-medium">AVG RENT</p>
-                      <p className="text-xl font-bold text-purple-900">{formatCurrency(stats.avgRent)}</p>
-                    </div>
-                    <DollarSign className="h-8 w-8 text-purple-500 opacity-50" />
-                  </div>
-                </div>
-                <div className="bg-indigo-50 p-4 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-indigo-600 text-xs font-medium">AVG HOME</p>
-                      <p className="text-xl font-bold text-indigo-900">{formatCurrency(stats.avgHome)}</p>
-                    </div>
-                    <Home className="h-8 w-8 text-indigo-500 opacity-50" />
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Map Container */}
@@ -272,7 +222,7 @@ export default function MacroPage() {
             <div className="mb-4">
               <h2 className="text-lg font-semibold text-gray-900">Interactive Map</h2>
               <p className="text-sm text-gray-600 mt-1">
-                Click on any marker to view historical trends. Color indicates rent-to-home ratio (green = good investment potential).
+                Click on any marker to view historical trends. Color indicates rent-to-home ratio.
               </p>
               {currentData && (
                 <p className="text-xs text-gray-500 mt-1">
