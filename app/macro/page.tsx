@@ -10,6 +10,7 @@ import { scaleSequential } from 'd3-scale'
 import { interpolateRdBu } from 'd3-scale-chromatic'
 import { TrendingUp, TrendingDown, Home, DollarSign, MapPin, Calendar, X } from 'lucide-react'
 import zipcodes from 'zipcodes'
+import { CALIFORNIA_CITIES, getCityCoordinates, getCityBounds } from '@/lib/california-cities-data'
 
 // Dynamically import Leaflet components (no SSR)
 const MapContainer = dynamic(
@@ -47,26 +48,6 @@ const getZipCoordinates = (zipCode: string): [number, number] | null => {
   }
 }
 
-// City coordinates
-const CITY_COORDINATES: Record<string, [number, number]> = {
-  'Los Angeles': [34.0522, -118.2437],
-  'San Francisco': [37.7749, -122.4194],
-  'San Diego': [32.7157, -117.1611],
-  'San Jose': [37.3382, -121.8863],
-  'Oakland': [37.8044, -122.2712],
-  'Sacramento': [38.5816, -121.4944],
-  'Long Beach': [33.7701, -118.1937],
-  'Fresno': [36.7378, -119.7871],
-  'Santa Barbara': [34.4208, -119.6982],
-  'Berkeley': [37.8715, -122.2730],
-  'Pasadena': [34.1478, -118.1445],
-  'Irvine': [33.6846, -117.8265],
-  'Santa Monica': [34.0195, -118.4912],
-  'Palo Alto': [37.4419, -122.1430],
-  'Mountain View': [37.3861, -122.0839],
-  'Cupertino': [37.3230, -122.0322],
-  // Add more cities as needed
-}
 
 export default function MacroPage() {
   const [viewMode, setViewMode] = useState<'zip' | 'city'>('zip')
@@ -268,21 +249,22 @@ export default function MacroPage() {
                   />
                   
                   {viewMode === 'zip' && zipData?.map((zip) => {
-                    const bounds = getZipBounds(zip.zip)
-                    if (!bounds) {
+                    const coords = getZipCoordinates(zip.zip)
+                    if (!coords) {
                       console.warn(`No coordinates found for zip ${zip.zip}`)
                       return null
                     }
                     
                     return (
-                      <Rectangle
+                      <CircleMarker
                         key={zip.zip}
-                        bounds={bounds}
+                        center={coords}
+                        radius={16}
                         pathOptions={{
                           fillColor: getColor(Number(zip.avg_rent_home_ratio)),
                           fillOpacity: 0.7,
-                          color: 'rgba(255,255,255,0.3)',
-                          weight: 0.5,
+                          color: 'rgba(255,255,255,0.8)',
+                          weight: 1,
                           opacity: 1,
                         }}
                         eventHandlers={{
@@ -302,31 +284,27 @@ export default function MacroPage() {
                             </div>
                           </div>
                         </Popup>
-                      </Rectangle>
+                      </CircleMarker>
                     )
                   })}
                   
                   {viewMode === 'city' && cityData?.map((city) => {
-                    const coords = CITY_COORDINATES[city.city]
-                    if (!coords) return null
-                    
-                    // Create city bounds (larger than zip codes)
-                    const [lat, lng] = coords
-                    const offset = 0.05 // Larger area for cities
-                    const bounds: [[number, number], [number, number]] = [
-                      [lat - offset, lng - offset],
-                      [lat + offset, lng + offset]
-                    ]
+                    const coords = getCityCoordinates(city.city)
+                    if (!coords) {
+                      console.warn(`No coordinates found for city ${city.city}`)
+                      return null
+                    }
                     
                     return (
-                      <Rectangle
+                      <CircleMarker
                         key={city.city}
-                        bounds={bounds}
+                        center={coords}
+                        radius={16}
                         pathOptions={{
                           fillColor: getColor(Number(city.avg_rent_home_ratio)),
                           fillOpacity: 0.7,
-                          color: 'rgba(255,255,255,0.4)',
-                          weight: 1,
+                          color: 'rgba(255,255,255,0.8)',
+                          weight: 2,
                           opacity: 1,
                         }}
                         eventHandlers={{
@@ -346,7 +324,7 @@ export default function MacroPage() {
                             </div>
                           </div>
                         </Popup>
-                      </Rectangle>
+                      </CircleMarker>
                     )
                   })}
                 </MapContainer>
