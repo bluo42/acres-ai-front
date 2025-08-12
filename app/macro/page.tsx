@@ -155,7 +155,7 @@ export default function MacroPage() {
   
   const getColor = (ratio: number): string => {
     if (ratio === 0 || !colorScale) return '#999999'
-    return colorScale(ratio) as string
+    return colorScale(ratio) as unknown as string
   }
 
   // Debug logging
