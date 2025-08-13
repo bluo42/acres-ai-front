@@ -120,7 +120,7 @@ export default function MacroPage() {
   const currentData = viewMode === 'zip' ? zipData : cityData
   const isLoading = viewMode === 'zip' ? zipLoading : cityLoading
 
-  // Dynamic color scale based on actual data distribution (blue = low, red = high)
+  // Dynamic color scale based on actual data distribution (red = low, blue = high/good)
   const getColorScale = (data: any[]) => {
     if (!data || data.length === 0) return null
     
@@ -129,7 +129,7 @@ export default function MacroPage() {
     const maxRatio = Math.max(...ratios)
     
     return scaleSequential(interpolateRdBu)
-      .domain([maxRatio, minRatio]) // Reversed: blue for low, red for high ratios
+      .domain([minRatio, maxRatio]) // Normal order: red for low, blue for high ratios
   }
 
   const colorScale = getColorScale(currentData || [])
@@ -217,7 +217,7 @@ export default function MacroPage() {
               <span className="text-sm text-gray-600">Rent-to-Home Price Ratio:</span>
               <div className="flex items-center space-x-2">
                 <div className="flex items-center">
-                  <div className="w-4 h-4 rounded" style={{ backgroundColor: '#053061' }}></div>
+                  <div className="w-4 h-4 rounded" style={{ backgroundColor: '#67001f' }}></div>
                   <span className="ml-1 text-xs text-gray-600">Low</span>
                 </div>
                 <div className="flex items-center">
@@ -225,8 +225,8 @@ export default function MacroPage() {
                   <span className="ml-1 text-xs text-gray-600">Medium</span>
                 </div>
                 <div className="flex items-center">
-                  <div className="w-4 h-4 rounded" style={{ backgroundColor: '#67001f' }}></div>
-                  <span className="ml-1 text-xs text-gray-600">High</span>
+                  <div className="w-4 h-4 rounded" style={{ backgroundColor: '#053061' }}></div>
+                  <span className="ml-1 text-xs text-gray-600">High (Good)</span>
                 </div>
               </div>
               {stats && (
