@@ -1,14 +1,67 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
 import { propertyService } from '@/lib/property-service'
 import { calculateUnderwriting } from '@/lib/underwriting-calculations'
 import { UnitInput, UnderwritingInput, UnderwritingResult } from '@/lib/types'
-import { ArrowLeft, Plus, Trash2, Calculator, TrendingUp } from 'lucide-react'
-import Navbar from '@/components/navbar'
+import { ArrowLeft, Plus, Trash2, Calculator, TrendingUp, MapPin, Square, RotateCw, Download, Map, Eye, Layers } from 'lucide-react'
+import dynamic from 'next/dynamic'
+
+// Dynamically import Google Maps component
+const GoogleMapADUPlanner = dynamic(
+  () => import('@/components/GoogleMapADUPlanner'),
+  { ssr: false }
+)
+
+// ADU Plan types
+interface ADUPlan {
+  id: string
+  name: string
+  width: number // in meters
+  length: number // in meters
+  sqft: number
+  bedrooms: number
+  bathrooms: number
+  color: string
+}
+
+
+// Available ADU plans
+const aduPlans: ADUPlan[] = [
+  {
+    id: 'studio-400',
+    name: 'Studio ADU',
+    width: 6.1,
+    length: 12.2,
+    sqft: 400,
+    bedrooms: 0,
+    bathrooms: 1,
+    color: '#3b82f6'
+  },
+  {
+    id: '1br-600',
+    name: '1 Bedroom ADU',
+    width: 7.6,
+    length: 15.2,
+    sqft: 600,
+    bedrooms: 1,
+    bathrooms: 1,
+    color: '#10b981'
+  },
+  {
+    id: '2br-800',
+    name: '2 Bedroom ADU',
+    width: 9.1,
+    length: 18.3,
+    sqft: 800,
+    bedrooms: 2,
+    bathrooms: 1,
+    color: '#8b5cf6'
+  }
+]
 
 export default function UnderwritingPage() {
   const params = useParams()
@@ -23,6 +76,9 @@ export default function UnderwritingPage() {
   const [additionalUnits, setAdditionalUnits] = useState(1)
   const [result, setResult] = useState<UnderwritingResult | null>(null)
   const [isCalculating, setIsCalculating] = useState(false)
+  
+  // ADU placement states
+  const [showADUPlanner, setShowADUPlanner] = useState(false)
   
   const [advancedSettings, setAdvancedSettings] = useState({
     acquisition_price: undefined as number | undefined,
@@ -52,6 +108,8 @@ export default function UnderwritingPage() {
   console.log('Available properties:', properties?.map(p => ({id: p.id, property: p.property})))
   console.log('Looking for property with id:', propertyId)
   console.log('Found property:', property)
+
+
 
   const addUnit = () => {
     setUnits([...units, { beds: 1, baths: 1, sqft: 600, rent: 2000, construction_cost: 120000 }])
@@ -119,7 +177,6 @@ export default function UnderwritingPage() {
   if (!property) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
         <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
           <div className="text-center py-12">
             <h3 className="text-lg font-medium text-gray-900">Property not found</h3>
@@ -141,7 +198,6 @@ export default function UnderwritingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div className="space-y-8">
           {/* Header */}
@@ -177,6 +233,71 @@ export default function UnderwritingPage() {
                   />
                 </div>
               )}
+
+              {/* Google Maps ADU Planning */}
+              <div className="bg-white shadow rounded-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-medium text-gray-900">Visual ADU Planning</h2>
+                  <button
+                    onClick={() => setShowADUPlanner(!showADUPlanner)}
+                    className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200"
+                  >
+                    <Map className="h-4 w-4 mr-1" />
+                    {showADUPlanner ? 'Hide Map' : 'Show Map'}
+                  </button>
+                </div>
+                
+                {showADUPlanner && (
+                  <>
+                    {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY && process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY !== 'YOUR_GOOGLE_MAPS_API_KEY_HERE' ? (
+                      <GoogleMapADUPlanner
+                        address={property.property}
+                        aduPlans={aduPlans}
+                        onADUsChange={(adus) => {
+                          // Update units based on placed ADUs
+                          const newUnits = adus.map(adu => ({
+                            beds: adu.plan.bedrooms,
+                            baths: adu.plan.bathrooms,
+                            sqft: adu.plan.sqft,
+                            rent: adu.plan.bedrooms === 0 ? 1800 : adu.plan.bedrooms === 1 ? 2200 : 2800,
+                            construction_cost: adu.plan.sqft * 200
+                          }))
+                          if (newUnits.length > 0) {
+                            setUnits(newUnits)
+                            setAdditionalUnits(newUnits.length)
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <h3 className="text-sm font-medium text-yellow-800 mb-2">Google Maps API Key Required</h3>
+                        <p className="text-sm text-yellow-700 mb-3">
+                          To use the advanced ADU planning features with satellite view and Street View, you need to set up a Google Maps API key.
+                        </p>
+                        <ol className="text-sm text-yellow-700 space-y-2">
+                          <li>1. Go to <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Google Cloud Console</a></li>
+                          <li>2. Create a new project or select an existing one</li>
+                          <li>3. Enable these APIs:
+                            <ul className="ml-4 mt-1">
+                              <li>• Maps JavaScript API</li>
+                              <li>• Places API</li>
+                              <li>• Street View Static API</li>
+                              <li>• Geocoding API</li>
+                            </ul>
+                          </li>
+                          <li>4. Create an API key in the Credentials section</li>
+                          <li>5. Add the key to your <code className="bg-yellow-100 px-1 rounded">.env.local</code> file:
+                            <pre className="bg-yellow-100 p-2 rounded mt-1 text-xs">
+                              NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_key_here
+                            </pre>
+                          </li>
+                          <li>6. Restart your development server</li>
+                        </ol>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
 
               <div className="bg-white shadow rounded-lg p-6">
                 <h2 className="text-lg font-medium text-gray-900 mb-4">Property Details</h2>

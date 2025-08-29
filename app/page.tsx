@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { propertyService } from '@/lib/property-service'
 import { PropertySummary } from '@/lib/types'
 import { Calculator, MapPin, ChevronUp, ChevronDown, Home } from 'lucide-react'
-import Navbar from '@/components/navbar'
 
 type SortField = 'property' | 'price' | 'lot_size' | 'total_units' | 'additional_units'
 type SortDirection = 'asc' | 'desc'
@@ -72,7 +71,6 @@ export default function HomePage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
         <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
@@ -85,7 +83,6 @@ export default function HomePage() {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
         <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
           <div className="bg-red-50 border border-red-200 rounded-md p-4">
             <div className="flex">
@@ -106,7 +103,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div className="md:flex md:items-center md:justify-between mb-8">
           <div className="flex-1 min-w-0">

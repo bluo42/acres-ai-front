@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { useQuery } from '@tanstack/react-query'
 import { macroService, ZipData, CityData } from '@/lib/macro-service'
-import Navbar from '@/components/navbar'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { scaleSequential } from 'd3-scale'
 import { interpolateRdBu } from 'd3-scale-chromatic'
@@ -160,7 +159,6 @@ export default function MacroPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div className="space-y-6">
           {/* Header with mode toggle */}
