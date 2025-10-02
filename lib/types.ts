@@ -16,6 +16,11 @@ export interface UnitInput {
   sqft: number;
   rent: number;
   construction_cost: number;
+  time_to_completion?: number; // months
+  start_month?: number; // months from now
+  cost_per_sf?: number;
+  unit_type?: 'new' | 'renovation';
+  auto_rent?: boolean; // whether to auto-lookup rent
 }
 
 export interface UnderwritingInput {

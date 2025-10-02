@@ -32,7 +32,7 @@ export default function GoogleMapADUPlanner({ address, aduPlans, onADUsChange }:
   const mapRef = useRef<HTMLDivElement>(null)
   const googleMapRef = useRef<google.maps.Map | null>(null)
   const streetViewRef = useRef<google.maps.StreetViewPanorama | null>(null)
-  const drawingManagerRef = useRef<google.maps.drawing.DrawingManager | null>(null)
+  const mapClickListenerRef = useRef<google.maps.MapsEventListener | null>(null)
   
   const [selectedADUPlan, setSelectedADUPlan] = useState<ADUPlan>(aduPlans[0])
   const [placedADUs, setPlacedADUs] = useState<PlacedADU[]>([])
@@ -40,6 +40,7 @@ export default function GoogleMapADUPlanner({ address, aduPlans, onADUsChange }:
   const [showStreetView, setShowStreetView] = useState(false)
   const [propertyCenter, setPropertyCenter] = useState<google.maps.LatLngLiteral>({ lat: 34.0522, lng: -118.2437 })
   const [isMapLoaded, setIsMapLoaded] = useState(false)
+  const [isPlacingMode, setIsPlacingMode] = useState(false)
 
   // Initialize Google Map
   useEffect(() => {
@@ -57,50 +58,6 @@ export default function GoogleMapADUPlanner({ address, aduPlans, onADUsChange }:
     })
 
     googleMapRef.current = map
-
-    // Initialize drawing manager
-    const drawingManager = new google.maps.drawing.DrawingManager({
-      drawingMode: null,
-      drawingControl: false,
-      rectangleOptions: {
-        fillColor: selectedADUPlan.color,
-        fillOpacity: 0.5,
-        strokeWeight: 2,
-        strokeColor: '#000000',
-        editable: true,
-        draggable: true
-      }
-    })
-
-    drawingManager.setMap(map)
-    drawingManagerRef.current = drawingManager
-
-    // Handle rectangle complete event
-    google.maps.event.addListener(drawingManager, 'rectanglecomplete', (rectangle: google.maps.Rectangle) => {
-      const bounds = rectangle.getBounds()
-      if (bounds) {
-        const center = bounds.getCenter()
-        const newADU: PlacedADU = {
-          id: `adu-${Date.now()}`,
-          plan: selectedADUPlan,
-          rectangle,
-          position: { lat: center.lat(), lng: center.lng() }
-        }
-        
-        setPlacedADUs(prev => [...prev, newADU])
-        
-        // Add click listener to remove
-        google.maps.event.addListener(rectangle, 'click', () => {
-          if (window.confirm(`Remove ${selectedADUPlan.name}?`)) {
-            rectangle.setMap(null)
-            setPlacedADUs(prev => prev.filter(adu => adu.id !== newADU.id))
-          }
-        })
-      }
-      
-      // Reset drawing mode
-      drawingManager.setDrawingMode(null)
-    })
 
     // Geocode the address
     const geocoder = new google.maps.Geocoder()
@@ -128,7 +85,7 @@ export default function GoogleMapADUPlanner({ address, aduPlans, onADUsChange }:
       // Cleanup
       placedADUs.forEach(adu => adu.rectangle.setMap(null))
     }
-  }, [address, mapType, selectedADUPlan])
+  }, [address, mapType])
 
   // Update map type
   useEffect(() => {
@@ -172,24 +129,111 @@ export default function GoogleMapADUPlanner({ address, aduPlans, onADUsChange }:
     )
   }
 
-  // Place ADU using drawing manager
-  const startPlacingADU = () => {
-    if (!drawingManagerRef.current || !googleMapRef.current) return
+  // Convert meters to lat/lng offset based on latitude
+  const metersToLatLng = (meters: number, lat: number) => {
+    // Approximate conversion (varies by latitude)
+    const latOffset = meters / 111320 // 1 degree latitude = ~111,320 meters
+    const lngOffset = meters / (111320 * Math.cos(lat * Math.PI / 180)) // Longitude varies by latitude
+    return { latOffset, lngOffset }
+  }
 
-    // Update drawing manager options with selected ADU colors
-    drawingManagerRef.current.setOptions({
-      rectangleOptions: {
-        fillColor: selectedADUPlan.color,
-        fillOpacity: 0.5,
-        strokeWeight: 2,
-        strokeColor: '#000000',
-        editable: true,
-        draggable: true
-      }
+  // Place ADU at clicked location
+  const placeADUAtLocation = (location: google.maps.LatLng) => {
+    if (!googleMapRef.current) return
+
+    const lat = location.lat()
+    const lng = location.lng()
+    
+    // Convert ADU dimensions from meters to lat/lng offsets
+    const { latOffset: heightOffset } = metersToLatLng(selectedADUPlan.length / 2, lat)
+    const { lngOffset: widthOffset } = metersToLatLng(selectedADUPlan.width / 2, lat)
+    
+    // Create rectangle with fixed size centered at click location
+    const rectangle = new google.maps.Rectangle({
+      bounds: {
+        north: lat + heightOffset,
+        south: lat - heightOffset,
+        east: lng + widthOffset,
+        west: lng - widthOffset
+      },
+      fillColor: selectedADUPlan.color,
+      fillOpacity: 0.5,
+      strokeWeight: 2,
+      strokeColor: '#000000',
+      editable: true,
+      draggable: true,
+      map: googleMapRef.current
     })
 
-    drawingManagerRef.current.setDrawingMode(google.maps.drawing.OverlayType.RECTANGLE)
+    const newADU: PlacedADU = {
+      id: `adu-${Date.now()}`,
+      plan: selectedADUPlan,
+      rectangle,
+      position: { lat, lng }
+    }
+    
+    setPlacedADUs(prev => [...prev, newADU])
+    
+    // Add click listener to remove
+    google.maps.event.addListener(rectangle, 'click', () => {
+      if (window.confirm(`Remove ${selectedADUPlan.name}?`)) {
+        rectangle.setMap(null)
+        setPlacedADUs(prev => prev.filter(adu => adu.id !== newADU.id))
+      }
+    })
+    
+    // Exit placing mode after placing ADU
+    setIsPlacingMode(false)
   }
+
+  // Toggle placing mode
+  const startPlacingADU = () => {
+    if (!googleMapRef.current) return
+    
+    if (isPlacingMode) {
+      // Cancel placing mode
+      setIsPlacingMode(false)
+    } else {
+      // Enter placing mode
+      setIsPlacingMode(true)
+    }
+  }
+
+  // Handle map clicks when in placing mode
+  useEffect(() => {
+    if (!googleMapRef.current) return
+
+    // Remove existing listener
+    if (mapClickListenerRef.current) {
+      google.maps.event.removeListener(mapClickListenerRef.current)
+      mapClickListenerRef.current = null
+    }
+
+    if (isPlacingMode) {
+      // Change cursor to crosshair
+      googleMapRef.current.setOptions({ draggableCursor: 'crosshair' })
+      
+      // Add click listener
+      mapClickListenerRef.current = google.maps.event.addListener(
+        googleMapRef.current, 
+        'click', 
+        (e: google.maps.MapMouseEvent) => {
+          if (e.latLng) {
+            placeADUAtLocation(e.latLng)
+          }
+        }
+      )
+    } else {
+      // Reset cursor
+      googleMapRef.current.setOptions({ draggableCursor: null })
+    }
+
+    return () => {
+      if (mapClickListenerRef.current) {
+        google.maps.event.removeListener(mapClickListenerRef.current)
+      }
+    }
+  }, [isPlacingMode, selectedADUPlan])
 
   // Clear all ADUs
   const clearAllADUs = () => {
@@ -207,7 +251,7 @@ export default function GoogleMapADUPlanner({ address, aduPlans, onADUsChange }:
   return (
     <>
       <Script
-        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places,drawing,geometry`}
+        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places,geometry`}
         strategy="lazyOnload"
       />
       
@@ -246,10 +290,14 @@ export default function GoogleMapADUPlanner({ address, aduPlans, onADUsChange }:
           <div className="flex gap-2">
             <button
               onClick={startPlacingADU}
-              className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+              className={`inline-flex items-center px-3 py-2 border text-sm font-medium rounded-md transition-colors ${
+                isPlacingMode
+                  ? 'border-red-300 text-red-700 bg-red-50 hover:bg-red-100'
+                  : 'border-transparent text-white bg-blue-600 hover:bg-blue-700'
+              }`}
             >
               <Square className="h-4 w-4 mr-1" />
-              Place {selectedADUPlan.name}
+              {isPlacingMode ? 'Cancel Placing' : `Place ${selectedADUPlan.name}`}
             </button>
             
             <button
@@ -287,8 +335,9 @@ export default function GoogleMapADUPlanner({ address, aduPlans, onADUsChange }:
         {/* Instructions */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
           <p className="text-sm text-blue-800">
-            <strong>How to use:</strong> Select an ADU type, click "Place ADU", then draw a rectangle on the map where you want to place it. 
-            Click on placed ADUs to remove them. Use Street View to see the property from street level.
+            <strong>How to use:</strong> Select an ADU type, click "Place ADU", then click on the map where you want to place it. 
+            The ADU will be placed with its specified dimensions ({selectedADUPlan.width}m × {selectedADUPlan.length}m). 
+            Click on placed ADUs to remove them. You can drag ADUs to reposition them after placement.
           </p>
         </div>
 

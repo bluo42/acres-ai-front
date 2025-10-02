@@ -9,6 +9,7 @@ import { calculateUnderwriting } from '@/lib/underwriting-calculations'
 import { UnitInput, UnderwritingInput, UnderwritingResult } from '@/lib/types'
 import { ArrowLeft, Plus, Trash2, Calculator, TrendingUp, MapPin, Square, RotateCw, Download, Map, Eye, Layers } from 'lucide-react'
 import dynamic from 'next/dynamic'
+import UnderwritingMode from '@/components/UnderwritingMode'
 
 // Dynamically import Google Maps component
 const GoogleMapADUPlanner = dynamic(
@@ -76,6 +77,7 @@ export default function UnderwritingPage() {
   const [additionalUnits, setAdditionalUnits] = useState(1)
   const [result, setResult] = useState<UnderwritingResult | null>(null)
   const [isCalculating, setIsCalculating] = useState(false)
+  const [useAdvancedMode, setUseAdvancedMode] = useState(false)
   
   // ADU placement states
   const [showADUPlanner, setShowADUPlanner] = useState(false)
@@ -139,6 +141,27 @@ export default function UnderwritingPage() {
         additional_units: additionalUnits,
         units,
         ...advancedSettings,
+      }
+
+      const calculationResult = calculateUnderwriting(input, propertyData)
+      setResult(calculationResult)
+    } catch (error) {
+      console.error('Error calculating underwriting:', error)
+    } finally {
+      setIsCalculating(false)
+    }
+  }
+
+  const handleAdvancedCalculate = async (advancedUnits: UnitInput[], settings: any) => {
+    if (!property || !propertyData) return
+
+    setIsCalculating(true)
+    try {
+      const input: UnderwritingInput = {
+        property_id: property.id,
+        additional_units: advancedUnits.length,
+        units: advancedUnits,
+        ...settings,
       }
 
       const calculationResult = calculateUnderwriting(input, propertyData)
@@ -216,6 +239,38 @@ export default function UnderwritingPage() {
             </div>
           </div>
 
+          {/* Mode Toggle */}
+          <div className="bg-white shadow rounded-lg p-4">
+            <div className="flex items-center justify-center space-x-4">
+              <button
+                onClick={() => setUseAdvancedMode(false)}
+                className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                  !useAdvancedMode
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Simple Mode
+              </button>
+              <button
+                onClick={() => setUseAdvancedMode(true)}
+                className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                  useAdvancedMode
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Advanced Mode
+              </button>
+            </div>
+          </div>
+
+          {useAdvancedMode ? (
+            <UnderwritingMode
+              propertyData={propertyData}
+              onCalculate={handleAdvancedCalculate}
+            />
+          ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Left Column - Input Form */}
             <div className="space-y-6">
@@ -634,6 +689,7 @@ export default function UnderwritingPage() {
               )}
             </div>
           </div>
+          )}
         </div>
       </main>
     </div>
